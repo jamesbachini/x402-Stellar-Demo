@@ -19,7 +19,7 @@ cp .env-local .env
 
 and fill required environment variables:
 
-- `FACILITATOR_URL` - Facilitator endpoint URL
+- `FACILITATOR_URL` - Facilitator endpoint URL (optional, defaults to `https://x402.org/facilitator`)
 - `EVM_ADDRESS` - Ethereum address to receive payments
 - `SVM_ADDRESS` - Solana address to receive payments
 
