@@ -1,3 +1,8 @@
+x402/go
+x402/python
+x402/examples/go
+x402/examples/python
+
 # Logs
 logs
 *.log
