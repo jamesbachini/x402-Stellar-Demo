@@ -1,20 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
-import { withX402 } from "@x402/next";
-import { x402ResourceServer, HTTPFacilitatorClient } from "@x402/core/server";
+import { withX402FromHTTPServer } from "@x402/next";
+import {
+  x402ResourceServer,
+  x402HTTPResourceServer,
+  HTTPFacilitatorClient,
+} from "@x402/core/server";
 import { ExactEvmScheme } from "@x402/evm/exact/server";
 
-const facilitatorUrl = process.env.FACILITATOR_URL;
-export const evmAddress = process.env.EVM_ADDRESS as `0x${string}`;
+const DEFAULT_FACILITATOR_URL = "https://x402.org/facilitator";
+const facilitatorUrl = process.env.FACILITATOR_URL || DEFAULT_FACILITATOR_URL;
 
-if (!facilitatorUrl) {
-  console.error("❌ FACILITATOR_URL environment variable is required");
-  process.exit(1);
+if (!process.env.FACILITATOR_URL) {
+  console.warn(
+    `FACILITATOR_URL not set. Falling back to default facilitator: ${DEFAULT_FACILITATOR_URL}`,
+  );
 }
 
-if (!evmAddress) {
-  console.error("❌ EVM_ADDRESS environment variable is required");
-  process.exit(1);
-}
+const getEvmAddress = (): `0x${string}` => process.env.EVM_ADDRESS as `0x${string}`;
+const createRuntimeConfigError = () =>
+  !process.env.EVM_ADDRESS
+    ? "Missing required environment variable: EVM_ADDRESS. Set it in .env before requesting this route."
+    : null;
 
 // Create HTTP facilitator client
 const facilitatorClient = new HTTPFacilitatorClient({ url: facilitatorUrl });
@@ -56,19 +62,26 @@ const handler = async (_: NextRequest) => {
  * Unlike middleware, withX402 guarantees payment settlement only after
  * the handler returns a successful response (status < 400).
  */
-export const GET = withX402(
-  handler,
-  {
+const httpServer = new x402HTTPResourceServer(server, {
+  "*": {
     accepts: [
       {
         scheme: "exact",
         price: "$0.01",
         network: "eip155:84532", // base-sepolia
-        payTo: evmAddress,
+        payTo: () => getEvmAddress(),
       },
     ],
     description: "Access to protected Mini App API",
     mimeType: "application/json",
   },
-  server,
-);
+});
+
+httpServer.onProtectedRequest(async () => {
+  const runtimeConfigError = createRuntimeConfigError();
+  if (runtimeConfigError) {
+    return { abort: true, reason: runtimeConfigError };
+  }
+});
+
+export const GET = withX402FromHTTPServer(handler, httpServer);

@@ -15,21 +15,27 @@ import {
   WalletDropdownDisconnect,
 } from "@coinbase/onchainkit/wallet";
 import { useEffect, useMemo, useState, useCallback } from "react";
-import { useAccount, useWalletClient, useSwitchChain } from "wagmi";
+import { useAccount, useWalletClient, useSwitchChain, usePublicClient } from "wagmi";
 import { baseSepolia } from "wagmi/chains";
 import { sdk } from "@farcaster/miniapp-sdk";
 import { x402Client, wrapFetchWithPayment } from "@x402/fetch";
 import { ExactEvmScheme } from "@x402/evm/exact/client";
 import type { ClientEvmSigner } from "@x402/evm";
-import type { WalletClient, Account } from "viem";
+import type { WalletClient, Account, PublicClient } from "viem";
 
 /**
  * Converts a wagmi/viem WalletClient to a ClientEvmSigner for x402Client
  */
-function wagmiToClientSigner(walletClient: WalletClient): ClientEvmSigner {
+function wagmiToClientSigner(
+  walletClient: WalletClient,
+  publicClient: PublicClient,
+): ClientEvmSigner {
   if (!walletClient.account) {
     throw new Error("Wallet client must have an account");
   }
+  const readContract = publicClient.readContract.bind(
+    publicClient,
+  ) as ClientEvmSigner["readContract"];
 
   return {
     address: walletClient.account.address,
@@ -43,6 +49,7 @@ function wagmiToClientSigner(walletClient: WalletClient): ClientEvmSigner {
       });
       return signature;
     },
+    readContract,
   };
 }
 
@@ -54,6 +61,7 @@ export default function App() {
   const [message, setMessage] = useState("");
   const { address, isConnected, chainId } = useAccount();
   const { data: walletClient } = useWalletClient();
+  const publicClient = usePublicClient({ chainId: baseSepolia.id });
   const { switchChainAsync } = useSwitchChain();
 
   sdk.actions.ready();
@@ -96,7 +104,7 @@ export default function App() {
   }, [addFrame]);
 
   const handleProtectedAction = useCallback(async () => {
-    if (!isConnected || !walletClient) {
+    if (!isConnected || !walletClient || !publicClient) {
       setMessage("Please connect your wallet first");
       return;
     }
@@ -112,7 +120,7 @@ export default function App() {
 
       // Create x402 client and register EVM scheme with wagmi signer
       const client = new x402Client();
-      const signer = wagmiToClientSigner(walletClient);
+      const signer = wagmiToClientSigner(walletClient, publicClient);
       client.register("eip155:*", new ExactEvmScheme(signer));
 
       // Wrap fetch with payment handling
@@ -137,7 +145,7 @@ export default function App() {
     } finally {
       setIsLoading(false);
     }
-  }, [isConnected, walletClient, chainId, switchChainAsync]);
+  }, [isConnected, walletClient, publicClient, chainId, switchChainAsync]);
 
   const saveFrameButton = useMemo(() => {
     if (context && !context.client.added) {
