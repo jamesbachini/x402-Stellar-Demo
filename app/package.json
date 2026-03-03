@@ -1,0 +1,10 @@
+{
+  "name": "app",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@x402/core": "workspace:*",
+    "@x402/express": "workspace:*",
+    "@x402/stellar": "workspace:*"
+  }
+}
