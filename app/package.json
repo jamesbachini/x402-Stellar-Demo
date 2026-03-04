@@ -2,9 +2,13 @@
   "name": "app",
   "private": true,
   "type": "module",
+  "scripts": {
+    "start": "node index.js"
+  },
   "dependencies": {
     "@x402/core": "workspace:*",
     "@x402/express": "workspace:*",
-    "@x402/stellar": "workspace:*"
+    "@x402/stellar": "workspace:*",
+    "express": "^5.1.0"
   }
 }

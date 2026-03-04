@@ -17,6 +17,18 @@ importers:
       '@x402/stellar':
         specifier: workspace:*
         version: link:../x402/typescript/packages/mechanisms/stellar
+      express:
+        specifier: ^5.1.0
+        version: 5.2.1
+
+  client:
+    dependencies:
+      '@x402/fetch':
+        specifier: workspace:*
+        version: link:../x402/typescript/packages/http/fetch
+      '@x402/stellar':
+        specifier: workspace:*
+        version: link:../x402/typescript/packages/mechanisms/stellar
 
   x402/typescript/packages/core:
     dependencies:
@@ -7590,7 +7602,7 @@ snapshots:
       '@noble/hashes': 1.8.0
       '@scure/base': 1.2.6
       '@types/debug': 4.1.12
-      debug: 4.3.4
+      debug: 4.4.3
       pony-cause: 2.1.11
       semver: 7.7.4
       uuid: 9.0.1
@@ -7604,7 +7616,7 @@ snapshots:
       '@noble/hashes': 1.8.0
       '@scure/base': 1.2.6
       '@types/debug': 4.1.12
-      debug: 4.3.4
+      debug: 4.4.3
       pony-cause: 2.1.11
       semver: 7.7.4
       uuid: 9.0.1
@@ -12459,10 +12471,10 @@ snapshots:
   ox@0.6.7(typescript@5.9.3)(zod@3.25.76):
     dependencies:
       '@adraffy/ens-normalize': 1.11.1
-      '@noble/curves': 1.8.1
-      '@noble/hashes': 1.7.1
-      '@scure/bip32': 1.6.2
-      '@scure/bip39': 1.5.4
+      '@noble/curves': 1.9.7
+      '@noble/hashes': 1.8.0
+      '@scure/bip32': 1.7.0
+      '@scure/bip39': 1.6.0
       abitype: 1.0.8(typescript@5.9.3)(zod@3.25.76)
       eventemitter3: 5.0.1
     optionalDependencies:
