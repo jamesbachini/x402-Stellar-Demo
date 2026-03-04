@@ -24,6 +24,7 @@ and fill required environment variables:
 - `SVM_PRIVATE_KEY` - Solana private key
 - `STELLAR_PRIVATE_KEY` - Stellar secret key (starts with `S`)
 - `PORT` - Server port (optional, defaults to 4022)
+- `STELLAR_MAX_TRANSACTION_FEE_STROOPS` - Max Stellar tx fee facilitator accepts (optional, defaults to `200000`)
 
 2. Install and build all packages from the typescript examples root:
 

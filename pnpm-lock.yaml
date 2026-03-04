@@ -14,6 +14,9 @@ importers:
       '@x402/express':
         specifier: workspace:*
         version: link:../x402/typescript/packages/http/express
+      '@x402/paywall':
+        specifier: workspace:*
+        version: link:../x402/typescript/packages/http/paywall
       '@x402/stellar':
         specifier: workspace:*
         version: link:../x402/typescript/packages/mechanisms/stellar

@@ -4,6 +4,7 @@ import { ExactStellarScheme } from "@x402/stellar/exact/client";
 
 const RESOURCE_SERVER_URL = process.env.RESOURCE_SERVER_URL ?? "http://localhost:3000";
 const ENDPOINT_PATH = process.env.ENDPOINT_PATH ?? "/my-service";
+// This is a non-secure testnet wallet shared publicly for demo purposes.
 const STELLAR_PRIVATE_KEY =
   process.env.STELLAR_PRIVATE_KEY ??
   "SBOIAB3VOCODRQDD35RNMBWNUYSFNIGSTVIMBSW73AUTTNQZOIKYAN3T";

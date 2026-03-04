@@ -27,12 +27,21 @@ const PORT = process.env.PORT || "4022";
 const evmPrivateKey = process.env.EVM_PRIVATE_KEY as `0x${string}` | undefined;
 const svmPrivateKey = process.env.SVM_PRIVATE_KEY as string | undefined;
 const stellarPrivateKey = process.env.STELLAR_PRIVATE_KEY as string | undefined;
+const stellarMaxTransactionFeeStroops = parseInt(
+  process.env.STELLAR_MAX_TRANSACTION_FEE_STROOPS || "200000",
+  10,
+);
 
 // Validate at least one private key is provided
 if (!evmPrivateKey && !svmPrivateKey && !stellarPrivateKey) {
   console.error(
     "❌ At least one of EVM_PRIVATE_KEY, SVM_PRIVATE_KEY, or STELLAR_PRIVATE_KEY is required",
   );
+  process.exit(1);
+}
+
+if (Number.isNaN(stellarMaxTransactionFeeStroops) || stellarMaxTransactionFeeStroops <= 0) {
+  console.error("❌ STELLAR_MAX_TRANSACTION_FEE_STROOPS must be a positive integer");
   process.exit(1);
 }
 
@@ -166,7 +175,12 @@ if (stellarPrivateKey) {
   const stellarSigner = createEd25519Signer(stellarPrivateKey);
   console.info(`Stellar Facilitator account: ${stellarSigner.address}`);
 
-  facilitator.register(STELLAR_NETWORK, new ExactStellarScheme([stellarSigner]));
+  facilitator.register(
+    STELLAR_NETWORK,
+    new ExactStellarScheme([stellarSigner], {
+      maxTransactionFeeStroops: stellarMaxTransactionFeeStroops,
+    }),
+  );
 }
 
 // Initialize Express app
@@ -273,6 +287,9 @@ app.get("/health", (req, res) => {
 const server = app.listen(parseInt(PORT), () => {
   console.log(`🚀 All Networks Facilitator listening on http://localhost:${PORT}`);
   console.log(`   Supported networks: ${facilitator.getSupported().kinds.map(k => k.network).join(", ")}`);
+  if (stellarPrivateKey) {
+    console.log(`   Stellar max tx fee (stroops): ${stellarMaxTransactionFeeStroops}`);
+  }
   console.log();
 });
 
