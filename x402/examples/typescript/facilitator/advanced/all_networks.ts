@@ -8,8 +8,6 @@
  * (e.g., "eip155" before "solana" before "stellar").
  */
 
-import { base58 } from "@scure/base";
-import { createKeyPairSignerFromBytes } from "@solana/kit";
 import { x402Facilitator } from "@x402/core/facilitator";
 import {
   PaymentPayload,
@@ -17,17 +15,8 @@ import {
   SettleResponse,
   VerifyResponse,
 } from "@x402/core/types";
-import { toFacilitatorEvmSigner } from "@x402/evm";
-import { ExactEvmScheme } from "@x402/evm/exact/facilitator";
-import { toFacilitatorSvmSigner } from "@x402/svm";
-import { ExactSvmScheme } from "@x402/svm/exact/facilitator";
-import { createEd25519Signer } from "@x402/stellar";
-import { ExactStellarScheme } from "@x402/stellar/exact/facilitator";
 import dotenv from "dotenv";
 import express from "express";
-import { createWalletClient, http, publicActions } from "viem";
-import { privateKeyToAccount } from "viem/accounts";
-import { baseSepolia } from "viem/chains";
 
 dotenv.config();
 
@@ -75,6 +64,20 @@ const facilitator = new x402Facilitator()
 
 // Register EVM scheme if private key is provided
 if (evmPrivateKey) {
+  const [
+    { toFacilitatorEvmSigner },
+    { ExactEvmScheme },
+    { createWalletClient, http, publicActions },
+    { privateKeyToAccount },
+    { baseSepolia },
+  ] = await Promise.all([
+    import("@x402/evm"),
+    import("@x402/evm/exact/facilitator"),
+    import("viem"),
+    import("viem/accounts"),
+    import("viem/chains"),
+  ]);
+
   const evmAccount = privateKeyToAccount(evmPrivateKey);
   console.info(`EVM Facilitator account: ${evmAccount.address}`);
 
@@ -131,6 +134,18 @@ if (evmPrivateKey) {
 
 // Register SVM scheme if private key is provided
 if (svmPrivateKey) {
+  const [
+    { base58 },
+    { createKeyPairSignerFromBytes },
+    { toFacilitatorSvmSigner },
+    { ExactSvmScheme },
+  ] = await Promise.all([
+    import("@scure/base"),
+    import("@solana/kit"),
+    import("@x402/svm"),
+    import("@x402/svm/exact/facilitator"),
+  ]);
+
   const svmAccount = await createKeyPairSignerFromBytes(
     base58.decode(svmPrivateKey),
   );
@@ -143,6 +158,11 @@ if (svmPrivateKey) {
 
 // Register Stellar scheme if private key is provided
 if (stellarPrivateKey) {
+  const [{ createEd25519Signer }, { ExactStellarScheme }] = await Promise.all([
+    import("@x402/stellar"),
+    import("@x402/stellar/exact/facilitator"),
+  ]);
+
   const stellarSigner = createEd25519Signer(stellarPrivateKey);
   console.info(`Stellar Facilitator account: ${stellarSigner.address}`);
 
@@ -250,8 +270,17 @@ app.get("/health", (req, res) => {
 });
 
 // Start the server
-app.listen(parseInt(PORT), () => {
+const server = app.listen(parseInt(PORT), () => {
   console.log(`🚀 All Networks Facilitator listening on http://localhost:${PORT}`);
   console.log(`   Supported networks: ${facilitator.getSupported().kinds.map(k => k.network).join(", ")}`);
   console.log();
+});
+
+server.on("error", (error: NodeJS.ErrnoException) => {
+  if (error.code === "EADDRINUSE") {
+    console.error(`❌ Port ${PORT} is already in use. Set PORT to a different value or stop the existing process.`);
+    process.exit(1);
+  }
+
+  throw error;
 });
