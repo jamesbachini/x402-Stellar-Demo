@@ -27,13 +27,23 @@ async function main() {
 
   console.log(`Paid response status: ${paidResponse.status}`);
 
+  let parsedBody;
+
   try {
-    console.log("Body:", JSON.parse(text));
+    parsedBody = JSON.parse(text);
+    console.log("Body:", parsedBody);
   } catch {
+    parsedBody = text;
     console.log("Body:", text);
   }
 
   if (paidResponse.ok) {
+    const grantedMessage =
+      parsedBody && typeof parsedBody === "object" && "message" in parsedBody
+        ? parsedBody.message
+        : "Secret valuable content here";
+    console.log(`Access Granted! "${grantedMessage}"`);
+
     const paymentResponse = new x402HTTPClient(client).getPaymentSettleResponse(name =>
       paidResponse.headers.get(name),
     );
