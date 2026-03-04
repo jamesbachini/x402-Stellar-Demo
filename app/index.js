@@ -52,8 +52,6 @@ const stellarPaywall = {
         <p><strong>Network:</strong> ${requirement.network}</p>
         <p><strong>Pay to:</strong> <code>${requirement.payTo}</code></p>
       </div>
-      <p>This endpoint is configured for Stellar x402 payments.</p>
-      <p>Use the Node client in <code>client/</code> to complete payment flow while Stellar browser wallet UI is not available in the current paywall package.</p>
     </main>
   </body>
 </html>`;
