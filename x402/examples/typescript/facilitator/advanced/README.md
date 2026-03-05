@@ -12,10 +12,10 @@ Express.js facilitator service demonstrating advanced x402 patterns including al
 
 ## Setup
 
-1. Copy `.env-local` to `.env`:
+1. Copy `.env.example` to `.env`:
 
 ```bash
-cp .env-local .env
+cp .env.example .env
 ```
 
 and fill required environment variables:

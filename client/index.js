@@ -1,15 +1,21 @@
+import "dotenv/config";
 import { x402Client, wrapFetchWithPayment, x402HTTPClient } from "@x402/fetch";
 import { createEd25519Signer } from "@x402/stellar";
 import { ExactStellarScheme } from "@x402/stellar/exact/client";
 
 const RESOURCE_SERVER_URL = process.env.RESOURCE_SERVER_URL ?? "http://localhost:3000";
 const ENDPOINT_PATH = process.env.ENDPOINT_PATH ?? "/my-service";
-// This is a non-secure testnet wallet shared publicly for demo purposes.
-const STELLAR_PRIVATE_KEY = "SBOIAB3VOCODRQDD35RNMBWNUYSFNIGSTVIMBSW73AUTTNQZOIKYAN3T";
+const NETWORK = process.env.NETWORK ?? "stellar:testnet";
+const STELLAR_PRIVATE_KEY = process.env.STELLAR_PRIVATE_KEY;
+
+if (!STELLAR_PRIVATE_KEY) {
+  console.error("STELLAR_PRIVATE_KEY is required. Set it in client/.env.");
+  process.exit(1);
+}
 
 async function main() {
   const url = new URL(ENDPOINT_PATH, RESOURCE_SERVER_URL).toString();
-  const signer = createEd25519Signer(STELLAR_PRIVATE_KEY, "stellar:testnet");
+  const signer = createEd25519Signer(STELLAR_PRIVATE_KEY, NETWORK);
   const client = new x402Client().register("stellar:*", new ExactStellarScheme(signer));
   const fetchWithPayment = wrapFetchWithPayment(fetch, client);
   console.log(`Target: ${url}\nClient address: ${signer.address}`);

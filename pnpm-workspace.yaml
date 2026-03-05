@@ -1,4 +1,4 @@
 packages:
   - "x402/typescript/packages/**"
-  - "app"
+  - "server"
   - "client"

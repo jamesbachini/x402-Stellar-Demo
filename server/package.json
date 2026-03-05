@@ -1,5 +1,5 @@
 {
-  "name": "app",
+  "name": "server",
   "private": true,
   "type": "module",
   "scripts": {
@@ -9,6 +9,7 @@
     "@x402/core": "workspace:*",
     "@x402/express": "workspace:*",
     "@x402/stellar": "workspace:*",
+    "dotenv": "^17.3.1",
     "express": "^5.1.0"
   }
 }
