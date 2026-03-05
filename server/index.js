@@ -271,9 +271,9 @@ const pageStyles = `
     padding: 4px 11px;
     border-radius: 999px;
     font-size: 12px;
-    color: #7c5a00;
-    border: 1px solid #f3d38f;
-    background: #fff6dd;
+    color: #3f3f46;
+    border: 1px solid var(--line);
+    background: #fff;
     margin-bottom: 10px;
   }
 
@@ -463,12 +463,14 @@ function renderLandingPage() {
       <section>
         <h2>Facilitator</h2>
         <div class="center-note">
-          <span class="badge">Coming soon</span>
+          <span class="badge">
+            <a class="link" href="https://channels.openzeppelin.com/x402" target="_blank" rel="noopener noreferrer">
+              channels.openzeppelin.com/x402
+            </a>
+          </span>
           <p>
-            <a class="link" href="https://openzeppelin.com" target="_blank" rel="noopener noreferrer">OpenZeppelin</a>
-            is building a hosted Stellar facilitator using their
-            <a class="link" href="https://github.com/OpenZeppelin/openzeppelin-relayer" target="_blank" rel="noopener noreferrer">Relayer x402 Facilitator Plugin</a>.
-            Once live, you will be able to point your server at their facilitator URL instead of running your own.
+            Live OpenZeppelin facilitator sponsors fee free transactions enabling seamless user
+            experience on the Stellar network.
           </p>
         </div>
       </section>
