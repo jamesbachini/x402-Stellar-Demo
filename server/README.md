@@ -17,6 +17,7 @@ cp .env.example .env
 - `NETWORK` (default: `stellar:testnet`)
 - `FACILITATOR_URL` (default: `http://localhost:4022`, expected to point at your own facilitator or a hosted one)
 - `FACILITATOR_API_KEY` (required when `FACILITATOR_URL` is OpenZeppelin hosted URL, sent as `Authorization: Bearer <key>`)
+- `STELLAR_RPC_URL` (optional fallback Soroban RPC URL for the browser paywall; recommended on `stellar:pubnet`)
 
 ## Run
 

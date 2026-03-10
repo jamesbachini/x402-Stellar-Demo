@@ -13,6 +13,7 @@ cp .env.example .env
 - `RESOURCE_SERVER_URL` (default: `http://localhost:3000`)
 - `ENDPOINT_PATH` (default: `/my-service`)
 - `NETWORK` (default: `stellar:testnet`)
+- `STELLAR_RPC_URL` (required on `stellar:pubnet`, optional on `stellar:testnet`)
 - `STELLAR_PRIVATE_KEY` (required)
 
 ## Run

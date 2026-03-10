@@ -1,10 +1,12 @@
 import "dotenv/config";
 import express from "express";
+import { fileURLToPath } from "node:url";
 import { paymentMiddleware, x402ResourceServer } from "@x402/express";
 import { HTTPFacilitatorClient } from "@x402/core/server";
 import { ExactStellarScheme } from "@x402/stellar/exact/server";
 
 const app = express();
+const PUBLIC_DIR = fileURLToPath(new URL("./public", import.meta.url));
 const PORT = Number.parseInt(process.env.PORT ?? "3000", 10);
 const FACILITATOR_URL = process.env.FACILITATOR_URL ?? "http://localhost:4022";
 const FACILITATOR_API_KEY = process.env.FACILITATOR_API_KEY;
@@ -12,6 +14,7 @@ const PAY_TO =
   process.env.PAY_TO ?? "GA4D33Z3EOB6BU4DOXS2JMZK3JQRABN3ERMF3FK5JF5YPG3CEKRI7WM4";
 const PRICE = process.env.PRICE ?? "$0.01";
 const NETWORK = process.env.NETWORK ?? "stellar:testnet";
+const STELLAR_RPC_URL = process.env.STELLAR_RPC_URL ?? "https://rpc.lightsail.network/";
 const ROUTE_PATH = process.env.ROUTE_PATH ?? "/my-service";
 
 if (FACILITATOR_URL.includes("channels.openzeppelin.com") && !FACILITATOR_API_KEY) {
@@ -28,6 +31,15 @@ function escapeHtml(value = "") {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#39;");
+}
+
+function serializeJsonForScript(value) {
+  return JSON.stringify(value)
+    .replaceAll("&", "\\u0026")
+    .replaceAll("<", "\\u003c")
+    .replaceAll(">", "\\u003e")
+    .replaceAll("\u2028", "\\u2028")
+    .replaceAll("\u2029", "\\u2029");
 }
 
 function formatNetworkLabel(network) {
@@ -543,6 +555,10 @@ const customPaywall = {
     const description = escapeHtml(paymentRequired?.resource?.description || "Access to protected content");
     const amount = escapeHtml(amountFromRequirements(paymentRequired));
     const network = escapeHtml(formatNetworkLabel(paymentRequired?.accepts?.[0]?.network || NETWORK));
+    const paywallPayload = serializeJsonForScript(paymentRequired);
+    const paywallConfig = serializeJsonForScript({
+      stellarRpcUrl: STELLAR_RPC_URL,
+    });
 
     return `
       <!doctype html>
@@ -621,6 +637,17 @@ const customPaywall = {
             .label { color: #4f4f57; }
             .value { color: #2f2f35; font-weight: 620; }
 
+            .value.mono {
+              font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+              font-size: 12px;
+            }
+
+            .value.wrap {
+              max-width: 260px;
+              text-align: right;
+              word-break: break-all;
+            }
+
             .cta {
               margin-top: 12px;
               width: 100%;
@@ -631,6 +658,51 @@ const customPaywall = {
               padding: 12px 14px;
               font-weight: 650;
               font-size: 14px;
+              cursor: pointer;
+            }
+
+            .cta:disabled {
+              cursor: progress;
+              opacity: 0.7;
+            }
+
+            .status {
+              margin-top: 12px;
+              border-radius: 8px;
+              padding: 10px 12px;
+              font-size: 13px;
+              line-height: 1.45;
+              background: #efeff3;
+              color: #42424a;
+            }
+
+            .status[data-state="error"] {
+              background: #fee2e2;
+              color: #991b1b;
+            }
+
+            .status[data-state="success"] {
+              background: #dcfce7;
+              color: #166534;
+            }
+
+            .result {
+              margin-top: 12px;
+              border-radius: 8px;
+              background: #101114;
+              color: #f4f4f5;
+              padding: 12px;
+              font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+              font-size: 12px;
+              line-height: 1.5;
+              overflow-x: auto;
+              white-space: pre-wrap;
+            }
+
+            .helper {
+              margin-top: 10px;
+              font-size: 12px;
+              color: #6b7280;
             }
           </style>
         </head>
@@ -643,19 +715,27 @@ const customPaywall = {
             </p>
 
             <div class="details">
-              <div class="row"><span class="label">Wallet:</span><span class="value">-</span></div>
-              <div class="row"><span class="label">Available balance:</span><span class="value">-</span></div>
+              <div class="row"><span class="label">Wallet:</span><span class="value mono wrap" data-wallet-value>Not connected</span></div>
+              <div class="row"><span class="label">Wallet network:</span><span class="value" data-network-value>Not connected</span></div>
               <div class="row"><span class="label">Amount:</span><span class="value">$${amount} USDC</span></div>
               <div class="row"><span class="label">Network:</span><span class="value">${network}</span></div>
             </div>
 
-            <button class="cta" type="button">Connect Wallet</button>
+            <button class="cta" id="paywall-action" type="button">Connect Freighter and pay</button>
+            <div class="status" id="paywall-status">Use the Freighter browser extension to sign the Stellar auth entry and unlock this response.</div>
+            <pre class="result" id="paywall-result" hidden></pre>
+            <p class="helper">If you are paying on pubnet, make sure Freighter is set to the same network and has a Soroban RPC endpoint configured.</p>
           </main>
+          <script id="payment-required-data" type="application/json">${paywallPayload}</script>
+          <script id="paywall-config-data" type="application/json">${paywallConfig}</script>
+          <script type="module" src="/paywall-client.js"></script>
         </body>
       </html>
     `;
   },
 };
+
+app.use(express.static(PUBLIC_DIR));
 
 app.get("/", (req, res) => {
   res.type("html").send(renderLandingPage());
