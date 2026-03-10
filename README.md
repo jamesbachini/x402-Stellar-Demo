@@ -5,6 +5,7 @@ Local x402 demo using published npm packages, a Stellar payer client, and a prot
 ## Components
 
 - `server`: x402-protected endpoint (`/my-service`)
+- `server-basic`: minimal x402-protected endpoint for tutorial use
 - `client`: calls endpoint, handles `402`, retries with payment
 
 ## Prerequisites
