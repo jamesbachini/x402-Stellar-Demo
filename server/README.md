@@ -15,7 +15,7 @@ cp .env.example .env
 - `PRICE` (default: `$0.01`)
 - `PAY_TO` (required for real settlement)
 - `NETWORK` (default: `stellar:testnet`)
-- `FACILITATOR_URL` (default: `http://localhost:4022`)
+- `FACILITATOR_URL` (default: `http://localhost:4022`, expected to point at your own facilitator or a hosted one)
 - `FACILITATOR_API_KEY` (required when `FACILITATOR_URL` is OpenZeppelin hosted URL, sent as `Authorization: Bearer <key>`)
 
 ## Run

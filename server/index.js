@@ -488,7 +488,7 @@ function renderLandingPage() {
           </article>
           <article class="card">
             <h3>@x402/stellar Package</h3>
-            <p>The pull request adding Stellar blockchain support to the x402 protocol (client, facilitator, and server).</p>
+            <p>The published npm package for Stellar x402 support across clients, facilitators, and resource servers.</p>
           </article>
           <article class="card">
             <h3>x402 Protocol</h3>
