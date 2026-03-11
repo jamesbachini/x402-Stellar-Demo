@@ -1,98 +1,178 @@
 # x402 Stellar Demo
 
-Local x402 demo using published npm packages, a Stellar payer client, and a protected Express server.
+Local x402 demo for Stellar with four runnable examples:
 
-## Components
+- `server-basic`: smallest protected Express server
+- `client-basic`: lowest-level Node client that handles the `402` flow manually
+- `server-advanced`: fuller server demo with browser paywall assets and extra config
+- `client-advanced`: configurable client that wraps `fetch` and retries with payment automatically
 
-- `server`: x402-protected endpoint (`/my-service`)
-- `server-basic`: minimal x402-protected endpoint for tutorial use
-- `client`: calls endpoint, handles `402`, retries with payment
+## Basic vs Advanced
+
+The basic examples are the smallest possible building blocks. They are useful when you want to understand the x402 request and payment flow with minimal code and minimal configuration.
+
+The advanced examples are closer to a real demo setup. They add more environment-based configuration, pubnet support details, and, on the server side, a browser paywall flow that works with Freighter.
 
 ## Prerequisites
 
 - Node.js `20+`
-- `pnpm` `10+`
+- `pnpm`
 
-## Install
+## Server Basic
+
+Use `server-basic` when you want the simplest protected API.
+
+1. Install dependencies:
 
 ```bash
-cd ~/x402-Stellar-Demo
+cd server-basic
 pnpm install
 ```
 
-## Create Env Files
+2. Optionally create `server-basic/.env` if you want to override defaults:
 
-```bash
-cd ~/x402-Stellar-Demo
-cp server/.env.example server/.env
-cp client/.env.example client/.env
-```
-
-## Recommended Flow (Pubnet + Hosted Facilitator)
-
-1. Fill `server/.env`:
 ```dotenv
-NETWORK=stellar:pubnet
-FACILITATOR_URL=https://channels.openzeppelin.com/x402
-FACILITATOR_API_KEY=YOUR_OPENZEPPELIN_API_KEY
-STELLAR_RPC_URL=YOUR_PREFERRED_PUBNET_SOROBAN_RPC
-PAY_TO=YOUR_PUBNET_RECEIVER_PUBLIC_KEY
-PRICE=$0.01
+PORT=3001
 ROUTE_PATH=/my-service
+PRICE=$0.01
+NETWORK=stellar:testnet
+FACILITATOR_URL=https://www.x402.org/facilitator
+PAY_TO=YOUR_STELLAR_PUBLIC_KEY
+```
+
+3. Start the server:
+
+```bash
+cd server-basic
+pnpm start
+```
+
+By default it serves `GET /` and protects `GET /my-service`.
+
+## Client Basic
+
+Use `client-basic` when you want to see the payment flow handled more explicitly in code.
+
+1. Install dependencies:
+
+```bash
+cd client-basic
+pnpm install
+```
+
+2. Create the env file:
+
+```bash
+cp client-basic/.env.example client-basic/.env
+```
+
+3. Set your Stellar secret in `client-basic/.env`:
+
+```dotenv
+STELLAR_PRIVATE_KEY=YOUR_STELLAR_SECRET
+```
+
+4. Start the client:
+
+```bash
+cd client-basic
+pnpm start
+```
+
+`client-basic` is currently wired to `http://localhost:3001/my-service` on `stellar:testnet`.
+
+## Server Advanced
+
+Use `server-advanced` when you want the fuller demo server, including the browser paywall assets and pubnet-oriented configuration.
+
+1. Install dependencies:
+
+```bash
+cd server-advanced
+pnpm install
+```
+
+2. Create the env file:
+
+```bash
+cp server-advanced/.env.example server-advanced/.env
+```
+
+3. Update `server-advanced/.env` for your network and payment destination. Example testnet config:
+
+```dotenv
 PORT=3000
-```
-2. Fill `client/.env`:
-```dotenv
-NETWORK=stellar:pubnet
-STELLAR_RPC_URL=YOUR_PREFERRED_PUBNET_SOROBAN_RPC
-STELLAR_PRIVATE_KEY=YOUR_PUBNET_CLIENT_SECRET
-RESOURCE_SERVER_URL=http://localhost:3000
-ENDPOINT_PATH=/my-service
-```
-3. Validate your API key against the hosted facilitator:
-```bash
-curl -i -H "Authorization: Bearer YOUR_API_KEY" \
-  https://channels.openzeppelin.com/x402/supported
-```
-4. Run server and client in separate terminals:
-```bash
-cd ~/x402-Stellar-Demo
-pnpm --filter server start
-```
-```bash
-cd ~/x402-Stellar-Demo
-pnpm --filter client start
-```
-
-## Testnet Flow
-
-This repo no longer vendors a facilitator implementation. For `stellar:testnet`, point `FACILITATOR_URL` at your own facilitator deployment that supports Stellar and keep `NETWORK=stellar:testnet` in both env files.
-
-Example `server/.env`:
-```dotenv
+ROUTE_PATH=/my-service
+PRICE=$0.01
 NETWORK=stellar:testnet
 FACILITATOR_URL=http://localhost:4022
-FACILITATOR_API_KEY=
 STELLAR_RPC_URL=
-PAY_TO=YOUR_TESTNET_RECEIVER_PUBLIC_KEY
-PRICE=$0.01
-ROUTE_PATH=/my-service
-PORT=3000
+FACILITATOR_API_KEY=
+PAY_TO=YOUR_STELLAR_PUBLIC_KEY
 ```
 
-Example `client/.env`:
+Example pubnet config:
+
 ```dotenv
-NETWORK=stellar:testnet
-STELLAR_RPC_URL=
-STELLAR_PRIVATE_KEY=YOUR_TESTNET_CLIENT_SECRET
+PORT=3000
+ROUTE_PATH=/my-service
+PRICE=$0.01
+NETWORK=stellar:pubnet
+FACILITATOR_URL=https://channels.openzeppelin.com/x402
+STELLAR_RPC_URL=YOUR_SOROBAN_RPC_URL
+FACILITATOR_API_KEY=YOUR_OPENZEPPELIN_API_KEY
+PAY_TO=YOUR_STELLAR_PUBLIC_KEY
+```
+
+4. Start the server:
+
+```bash
+cd server-advanced
+pnpm start
+```
+
+This starts the protected API on `GET /my-service` and builds the browser paywall bundle before launching.
+
+## Client Advanced
+
+Use `client-advanced` when you want a configurable Node client that automatically retries paid requests.
+
+1. Install dependencies:
+
+```bash
+cd client-advanced
+pnpm install
+```
+
+2. Create the env file:
+
+```bash
+cp client-advanced/.env.example client-advanced/.env
+```
+
+3. Update `client-advanced/.env`:
+
+```dotenv
 RESOURCE_SERVER_URL=http://localhost:3000
 ENDPOINT_PATH=/my-service
+NETWORK=stellar:testnet
+STELLAR_RPC_URL=
+STELLAR_PRIVATE_KEY=YOUR_STELLAR_SECRET
 ```
+
+For pubnet, keep `RESOURCE_SERVER_URL` and `ENDPOINT_PATH` the same, set `NETWORK=stellar:pubnet`, and provide `STELLAR_RPC_URL`.
+
+4. Start the client:
+
+```bash
+cd client-advanced
+pnpm start
+```
+
+The script shows the initial unpaid response, the paid retry, the response body, and the payment settlement headers.
 
 ## Notes
 
-- `server` and `client` automatically load their local `.env` files.
-- Keep networks aligned between server and client (`stellar:testnet` or `stellar:pubnet`).
-- The browser paywall now uses the Freighter extension to sign Stellar auth entries. `STELLAR_RPC_URL` is used as a fallback when the wallet does not provide a Soroban RPC endpoint.
-- `@x402/stellar` is consumed directly from npm; the repo no longer depends on a vendored `x402` workspace.
+- Keep client and server on the same network: `stellar:testnet` or `stellar:pubnet`.
+- `PAY_TO` must be a valid Stellar public key for real settlement.
 - Do not commit `.env` files with secrets.
