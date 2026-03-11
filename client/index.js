@@ -1,5 +1,5 @@
 import dotenv from "dotenv";
-import { Transaction } from "@stellar/stellar-sdk";
+import { Transaction, TransactionBuilder } from "@stellar/stellar-sdk";
 import { x402Client, x402HTTPClient } from "@x402/fetch";
 import { createEd25519Signer, getNetworkPassphrase } from "@x402/stellar";
 import { ExactStellarScheme } from "@x402/stellar/exact/client";
@@ -26,6 +26,40 @@ function getStellarTransactionFee(paymentPayload) {
   }
 }
 
+function tuneStellarPaymentPayloadFee(paymentPayload) {
+  const transactionXdr = paymentPayload?.payload?.transaction;
+  if (typeof transactionXdr !== "string") {
+    return paymentPayload;
+  }
+
+  try {
+    const networkPassphrase = getNetworkPassphrase(NETWORK);
+    const tx = new Transaction(transactionXdr, networkPassphrase);
+    const sorobanData = tx.toEnvelope().v1()?.tx()?.ext()?.sorobanData();
+    if (!sorobanData) {
+      return paymentPayload;
+    }
+
+    const tunedTx = TransactionBuilder.cloneFrom(tx, {
+      // Keep the transaction at the minimum supported fee; the resource fee
+      // stays embedded in sorobanData.
+      fee: "1",
+      sorobanData,
+      networkPassphrase,
+    }).build();
+
+    return {
+      ...paymentPayload,
+      payload: {
+        ...paymentPayload.payload,
+        transaction: tunedTx.toXDR(),
+      },
+    };
+  } catch {
+    return paymentPayload;
+  }
+}
+
 function describePaymentFailure(paymentRequired, txFee) {
 
   return `Payment rejected: ${JSON.stringify(paymentRequired)}`;
@@ -45,9 +79,13 @@ async function main() {
   const firstTry = await fetch(url, { method: "GET" });
   console.log(`Payment requested: ${firstTry.status}`);
   const paymentRequired = httpClient.getPaymentRequiredResponse(name => firstTry.headers.get(name));
-  const paymentPayload = await client.createPaymentPayload(paymentRequired);
+  const createdPaymentPayload = await client.createPaymentPayload(paymentRequired);
+  const paymentPayload = tuneStellarPaymentPayloadFee(createdPaymentPayload);
+  const createdTxFee = getStellarTransactionFee(createdPaymentPayload);
   const txFee = getStellarTransactionFee(paymentPayload);
-  if (txFee != null) {
+  if (txFee != null && createdTxFee != null && txFee !== createdTxFee) {
+    console.log(`Stellar tx fee: ${createdTxFee} stroops (tuned to ${txFee})`);
+  } else if (txFee != null) {
     console.log(`Stellar tx fee: ${txFee} stroops`);
   }
 
