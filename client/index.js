@@ -3,24 +3,13 @@ import { x402Client, wrapFetchWithPayment, x402HTTPClient } from "@x402/fetch";
 import { createEd25519Signer } from "@x402/stellar";
 import { ExactStellarScheme } from "@x402/stellar/exact/client";
 import { enableAllowHttpForInsecureSorobanRpc } from "./allow-http-rpc.js";
-
 enableAllowHttpForInsecureSorobanRpc();
 
-const RESOURCE_SERVER_URL = process.env.RESOURCE_SERVER_URL ?? "http://localhost:3000";
-const ENDPOINT_PATH = process.env.ENDPOINT_PATH ?? "/my-service";
-const NETWORK = process.env.NETWORK ?? "stellar:testnet";
 const STELLAR_PRIVATE_KEY = process.env.STELLAR_PRIVATE_KEY;
-const STELLAR_RPC_URL = process.env.STELLAR_RPC_URL ?? "";
-
-if (!STELLAR_PRIVATE_KEY) {
-  console.error("STELLAR_PRIVATE_KEY is required. Set it in client/.env.");
-  process.exit(1);
-}
-
-if (NETWORK === "stellar:pubnet" && !STELLAR_RPC_URL) {
-  console.error("STELLAR_RPC_URL is required when NETWORK=stellar:pubnet.");
-  process.exit(1);
-}
+const RESOURCE_SERVER_URL = "http://localhost:3000";
+const ENDPOINT_PATH = "/my-service";
+const NETWORK = "stellar:testnet";
+const STELLAR_RPC_URL = "https://soroban-testnet.stellar.org";
 
 async function main() {
   const url = new URL(ENDPOINT_PATH, RESOURCE_SERVER_URL).toString();
