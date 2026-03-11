@@ -6,14 +6,24 @@ import { enableAllowHttpForInsecureSorobanRpc } from "./allow-http-rpc.js";
 enableAllowHttpForInsecureSorobanRpc();
 
 const STELLAR_PRIVATE_KEY = process.env.STELLAR_PRIVATE_KEY;
+console.log(STELLAR_PRIVATE_KEY)
 const RESOURCE_SERVER_URL = "http://localhost:3000";
 const ENDPOINT_PATH = "/my-service";
 const NETWORK = "stellar:testnet";
 const STELLAR_RPC_URL = "https://soroban-testnet.stellar.org";
 
+function getRequiredPrivateKey() {
+  if (!STELLAR_PRIVATE_KEY) {
+    throw new Error(
+      "STELLAR_PRIVATE_KEY is required. Set it in client/.env to a Stellar secret seed starting with 'S'.",
+    );
+  }
+  return STELLAR_PRIVATE_KEY;
+}
+
 async function main() {
   const url = new URL(ENDPOINT_PATH, RESOURCE_SERVER_URL).toString();
-  const signer = createEd25519Signer(STELLAR_PRIVATE_KEY, NETWORK);
+  const signer = createEd25519Signer(getRequiredPrivateKey(), NETWORK);
   const rpcConfig = STELLAR_RPC_URL ? { url: STELLAR_RPC_URL } : undefined;
   const client = new x402Client().register("stellar:*", new ExactStellarScheme(signer, rpcConfig));
   const fetchWithPayment = wrapFetchWithPayment(fetch, client);
