@@ -1,29 +1,22 @@
-import "dotenv/config";
+import dotenv from "dotenv";
 import { x402Client, wrapFetchWithPayment, x402HTTPClient } from "@x402/fetch";
 import { createEd25519Signer } from "@x402/stellar";
 import { ExactStellarScheme } from "@x402/stellar/exact/client";
+import { fileURLToPath } from "node:url";
 import { enableAllowHttpForInsecureSorobanRpc } from "./allow-http-rpc.js";
+
+dotenv.config({ path: fileURLToPath(new URL("./.env", import.meta.url)), quiet: true });
 enableAllowHttpForInsecureSorobanRpc();
 
 const STELLAR_PRIVATE_KEY = process.env.STELLAR_PRIVATE_KEY;
-console.log(STELLAR_PRIVATE_KEY)
 const RESOURCE_SERVER_URL = "http://localhost:3000";
 const ENDPOINT_PATH = "/my-service";
 const NETWORK = "stellar:testnet";
 const STELLAR_RPC_URL = "https://soroban-testnet.stellar.org";
 
-function getRequiredPrivateKey() {
-  if (!STELLAR_PRIVATE_KEY) {
-    throw new Error(
-      "STELLAR_PRIVATE_KEY is required. Set it in client/.env to a Stellar secret seed starting with 'S'.",
-    );
-  }
-  return STELLAR_PRIVATE_KEY;
-}
-
 async function main() {
   const url = new URL(ENDPOINT_PATH, RESOURCE_SERVER_URL).toString();
-  const signer = createEd25519Signer(getRequiredPrivateKey(), NETWORK);
+  const signer = createEd25519Signer(STELLAR_PRIVATE_KEY, NETWORK);
   const rpcConfig = STELLAR_RPC_URL ? { url: STELLAR_RPC_URL } : undefined;
   const client = new x402Client().register("stellar:*", new ExactStellarScheme(signer, rpcConfig));
   const fetchWithPayment = wrapFetchWithPayment(fetch, client);
@@ -33,19 +26,8 @@ async function main() {
   const paidResponse = await fetchWithPayment(url, { method: "GET" });
   const text = await paidResponse.text();
   console.log(`Paid response status: ${paidResponse.status}`);
-  let parsedBody;
-  try {
-    parsedBody = JSON.parse(text);
-    console.log("Body:", parsedBody);
-  } catch {
-    parsedBody = text;
-    console.log("Body:", text);
-  }
-  if (paidResponse.ok) {
-    const grantedMessage =
-      parsedBody && typeof parsedBody === "object" && "message" in parsedBody
-        ? parsedBody.message
-        : "Secret valuable content here";
+  if (paidResponse) {
+    const grantedMessage = JSON.parse(text);
     console.log(`Access Granted! "${grantedMessage}"`);
     const paymentResponse = new x402HTTPClient(client).getPaymentSettleResponse(name =>
       paidResponse.headers.get(name),

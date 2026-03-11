@@ -1,9 +1,11 @@
-import "dotenv/config";
+import dotenv from "dotenv";
 import express from "express";
 import { fileURLToPath } from "node:url";
 import { paymentMiddleware, x402ResourceServer } from "@x402/express";
 import { HTTPFacilitatorClient } from "@x402/core/server";
 import { ExactStellarScheme } from "@x402/stellar/exact/server";
+
+dotenv.config({ path: fileURLToPath(new URL("./.env", import.meta.url)), quiet: true });
 
 const app = express();
 const PUBLIC_DIR = fileURLToPath(new URL("./public", import.meta.url));

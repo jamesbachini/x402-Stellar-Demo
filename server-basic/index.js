@@ -1,7 +1,11 @@
+import dotenv from "dotenv";
 import express from "express";
+import { fileURLToPath } from "node:url";
 import { paymentMiddlewareFromConfig } from "@x402/express";
 import { HTTPFacilitatorClient } from "@x402/core/server";
 import { ExactStellarScheme } from "@x402/stellar/exact/server";
+
+dotenv.config({ path: fileURLToPath(new URL("./.env", import.meta.url)), quiet: true });
 
 const {
   PORT = "3001",
